@@ -13,8 +13,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -27,11 +25,13 @@ jobs:
       - name: Run updater
         run: python update.py
 
-      - name: Commit and push if changed
+      - name: Update via API
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add proxies.json
-          git diff --staged --quiet || git commit -m "Update proxies"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/olliegdby/proxycheck.git
-          git push origin HEAD:main
+          CONTENT=$(cat proxies.json | jq -sR .)
+          SHA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/olliegdby/proxycheck/contents/proxies.json | jq -r '.sha')
+          curl -X PUT \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"message\":\"Update proxies\",\"content\":$CONTENT,\"sha\":\"$SHA\"}" \
+            https://api.github.com/repos/olliegdby/proxycheck/contents/proxies.json
