@@ -33,5 +33,5 @@ jobs:
           git config user.email "actions@github.com"
           git add proxies.json
           git diff --staged --quiet || git commit -m "Update proxies"
-          # ✅ Explicitly push with token in the URL
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/olliegdby/proxycheck.git HEAD:main
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/olliegdby/proxycheck.git
+          git push origin HEAD:main
