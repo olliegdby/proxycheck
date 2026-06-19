@@ -8,8 +8,6 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -26,12 +24,14 @@ jobs:
         run: python update.py
 
       - name: Update via API
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           CONTENT=$(cat proxies.json | jq -sR .)
-          SHA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          SHA=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
             https://api.github.com/repos/olliegdby/proxycheck/contents/proxies.json | jq -r '.sha')
           curl -X PUT \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: token $GITHUB_TOKEN" \
             -H "Content-Type: application/json" \
             -d "{\"message\":\"Update proxies\",\"content\":$CONTENT,\"sha\":\"$SHA\"}" \
             https://api.github.com/repos/olliegdby/proxycheck/contents/proxies.json
